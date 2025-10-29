@@ -11,30 +11,28 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class GraficoDesmatamento {
 
     public static void exibirInterface(Map<String, Double> dadosGeral,
-                                       Map<String, Double> dados2023,
-                                       Map<String, Double> dados2024,
                                        List<RegistroDesmatamento> registros) {
 
-        // --- Criação dos datasets ---
+        // --- Datasets ---
         DefaultCategoryDataset datasetBarras = criarDatasetBarras(dadosGeral);
-        DefaultCategoryDataset datasetLinhas = criarDatasetLinhas(dados2023, dados2024);
+        DefaultCategoryDataset datasetLinhas = criarDatasetLinhasPorMes(registros);
 
-        // --- Criação dos gráficos ---
+        // --- Gráficos ---
         JFreeChart graficoBarras = ChartFactory.createBarChart(
-                "Top 5 Municípios com Maior Desmatamento (2023+2024)",
+                "Top 5 Municípios com Maior Desmatamento (2023 + 2024)",
                 "Município", "Área (km²)", datasetBarras,
                 PlotOrientation.VERTICAL, true, true, false);
 
         JFreeChart graficoLinhas = ChartFactory.createLineChart(
-                "Comparativo de Desmatamento 2023 × 2024",
-                "Município", "Área (km²)", datasetLinhas,
+                "Comparativo Mensal de Desmatamento (2023 × 2024)",
+                "Mês", "Área (km²)", datasetLinhas,
                 PlotOrientation.VERTICAL, true, true, false);
 
         // --- Painéis dos gráficos ---
@@ -71,7 +69,6 @@ public class GraficoDesmatamento {
         frame.setLayout(new BorderLayout(10, 10));
         frame.setBackground(new Color(245, 255, 245));
 
-        // Cabeçalho com título
         JLabel titulo = new JLabel("📊 Painel de Monitoramento do Desmatamento", SwingConstants.CENTER);
         titulo.setFont(new Font("SansSerif", Font.BOLD, 20));
         titulo.setForeground(new Color(0, 100, 0));
@@ -103,11 +100,11 @@ public class GraficoDesmatamento {
         botao.setPreferredSize(new Dimension(140, 40));
         botao.setBorder(BorderFactory.createEmptyBorder(8, 15, 8, 15));
 
-        // Efeito hover
         botao.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 botao.setBackground(cor.darker());
             }
+
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 botao.setBackground(cor);
             }
@@ -126,15 +123,29 @@ public class GraficoDesmatamento {
         return dataset;
     }
 
-    private static DefaultCategoryDataset criarDatasetLinhas(Map<String, Double> dados2023, Map<String, Double> dados2024) {
+    private static DefaultCategoryDataset criarDatasetLinhasPorMes(List<RegistroDesmatamento> registros) {
+        Map<Integer, Double> dados2023 = agruparPorMes(registros, "2023");
+        Map<Integer, Double> dados2024 = agruparPorMes(registros, "2024");
+
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        for (Map.Entry<String, Double> entry : dados2023.entrySet()) {
-            dataset.addValue(entry.getValue(), "2023", entry.getKey());
+        String[] nomesMeses = {"Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+                "Jul", "Ago", "Set", "Out", "Nov", "Dez"};
+
+        for (int mes = 1; mes <= 12; mes++) {
+            dataset.addValue(dados2023.getOrDefault(mes, 0.0), "2023", nomesMeses[mes - 1]);
+            dataset.addValue(dados2024.getOrDefault(mes, 0.0), "2024", nomesMeses[mes - 1]);
         }
-        for (Map.Entry<String, Double> entry : dados2024.entrySet()) {
-            dataset.addValue(entry.getValue(), "2024", entry.getKey());
-        }
+
         return dataset;
+    }
+
+    private static Map<Integer, Double> agruparPorMes(List<RegistroDesmatamento> registros, String ano) {
+        return registros.stream()
+                .filter(r -> r.getData() != null && r.getData().startsWith(ano))
+                .collect(Collectors.groupingBy(
+                        r -> Integer.parseInt(r.getData().split("-")[1]),
+                        Collectors.summingDouble(RegistroDesmatamento::getAreaKm2)
+                ));
     }
 
     private static JPanel criarPainelDados(List<RegistroDesmatamento> registros) {
@@ -147,47 +158,62 @@ public class GraficoDesmatamento {
         titulo.setForeground(new Color(34, 139, 34));
         painel.add(titulo, BorderLayout.NORTH);
 
-        // Tabela e modelo
+        // ---------- TABELA ----------
         String[] colunas = {"Município", "Data", "Estado", "Bioma", "Área (km²)"};
         DefaultTableModel modelo = new DefaultTableModel(colunas, 0);
         JTable tabela = new JTable(modelo);
         tabela.setFont(new Font("SansSerif", Font.PLAIN, 13));
         tabela.setRowHeight(22);
         tabela.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 13));
-
         atualizarTabela(modelo, registros);
         JScrollPane scroll = new JScrollPane(tabela);
         scroll.setBorder(BorderFactory.createLineBorder(new Color(180, 200, 180)));
 
-        // Campo de filtro
-        JTextField campoFiltro = new JTextField(20);
-        campoFiltro.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        JButton btnFiltrar = criarBotao("🔍 Filtrar", new Color(46, 139, 87));
+        // ---------- COMBOBOX DE MESES ----------
+        String[] meses = {"Todos", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"};
+        JComboBox<String> comboMeses = new JComboBox<>(meses);
+        comboMeses.setFont(new Font("SansSerif", Font.BOLD, 13));
+        comboMeses.setPreferredSize(new Dimension(150, 30));
+
+        // Botão Mostrar Tudo
         JButton btnMostrarTudo = criarBotao("🔄 Mostrar Tudo", new Color(105, 105, 105));
+        btnMostrarTudo.setPreferredSize(new Dimension(150, 30));
 
-        JPanel painelFiltro = new JPanel();
-        painelFiltro.setBackground(new Color(230, 240, 230));
-        painelFiltro.add(new JLabel("Pesquisar: "));
-        painelFiltro.add(campoFiltro);
-        painelFiltro.add(btnFiltrar);
-        painelFiltro.add(btnMostrarTudo);
+        // Painel lateral
+        JPanel painelLateral = new JPanel();
+        painelLateral.setLayout(new GridLayout(2, 1, 5, 5));
+        painelLateral.setBackground(new Color(230, 240, 230));
+        painelLateral.add(comboMeses);
+        painelLateral.add(btnMostrarTudo);
+        painelLateral.setPreferredSize(new Dimension(170, 80));
 
-        painel.add(painelFiltro, BorderLayout.SOUTH);
         painel.add(scroll, BorderLayout.CENTER);
+        painel.add(painelLateral, BorderLayout.WEST);
 
-        // Ações
-        btnFiltrar.addActionListener(e -> {
-            String termo = campoFiltro.getText().trim().toLowerCase();
-            List<RegistroDesmatamento> filtrados = registros.stream()
-                    .filter(r ->
-                            r.getMunicipio().toLowerCase().contains(termo) ||
-                                    r.getBioma().toLowerCase().contains(termo) ||
-                                    r.getEstado().toLowerCase().contains(termo))
-                    .collect(Collectors.toList());
-            atualizarTabela(modelo, filtrados);
+        // ---------- AÇÕES ----------
+        comboMeses.addActionListener(e -> {
+            int indice = comboMeses.getSelectedIndex();
+            if (indice == 0) {
+                atualizarTabela(modelo, registros);
+            } else {
+                List<RegistroDesmatamento> filtrados = registros.stream()
+                        .filter(r -> {
+                            try {
+                                String[] partes = r.getData().split("-");
+                                if (partes.length < 2) return false;
+                                int mesRegistro = Integer.parseInt(partes[1]);
+                                return mesRegistro == indice;
+                            } catch (Exception ex) {
+                                return false;
+                            }
+                        })
+                        .collect(Collectors.toList());
+                atualizarTabela(modelo, filtrados);
+            }
         });
 
-        btnMostrarTudo.addActionListener(e -> atualizarTabela(modelo, registros));
+        btnMostrarTudo.addActionListener(e -> comboMeses.setSelectedIndex(0));
 
         return painel;
     }
@@ -205,4 +231,3 @@ public class GraficoDesmatamento {
         }
     }
 }
-
