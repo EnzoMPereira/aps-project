@@ -174,22 +174,24 @@ public class GraficoDesmatamento {
                 "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"};
         JComboBox<String> comboMeses = new JComboBox<>(meses);
         comboMeses.setFont(new Font("SansSerif", Font.BOLD, 13));
-        comboMeses.setPreferredSize(new Dimension(150, 30));
+        comboMeses.setPreferredSize(new Dimension(200, 30));
 
-        // Botão Mostrar Tudo
-        JButton btnMostrarTudo = criarBotao("🔄 Mostrar Tudo", new Color(105, 105, 105));
-        btnMostrarTudo.setPreferredSize(new Dimension(150, 30));
+        JLabel lblFiltro = new JLabel("Filtrar por mês:");
+        lblFiltro.setFont(new Font("SansSerif", Font.BOLD, 14));
+        lblFiltro.setHorizontalAlignment(SwingConstants.CENTER);
 
-        // Painel lateral
         JPanel painelLateral = new JPanel();
-        painelLateral.setLayout(new GridLayout(2, 1, 5, 5));
+        painelLateral.setLayout(new BorderLayout(5, 5));
         painelLateral.setBackground(new Color(230, 240, 230));
-        painelLateral.add(comboMeses);
-        painelLateral.add(btnMostrarTudo);
-        painelLateral.setPreferredSize(new Dimension(170, 80));
+        painelLateral.add(lblFiltro, BorderLayout.NORTH);
+        painelLateral.add(comboMeses, BorderLayout.NORTH);
 
-        painel.add(scroll, BorderLayout.CENTER);
-        painel.add(painelLateral, BorderLayout.WEST);
+        // ---------- DIVISÃO DO PAINEL ----------
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, painelLateral, scroll);
+        splitPane.setResizeWeight(0.33); // 1/3 para o painel lateral, 2/3 para a tabela
+        splitPane.setDividerSize(8);
+        splitPane.setBorder(null);
+        painel.add(splitPane, BorderLayout.CENTER);
 
         // ---------- AÇÕES ----------
         comboMeses.addActionListener(e -> {
@@ -212,8 +214,6 @@ public class GraficoDesmatamento {
                 atualizarTabela(modelo, filtrados);
             }
         });
-
-        btnMostrarTudo.addActionListener(e -> comboMeses.setSelectedIndex(0));
 
         return painel;
     }

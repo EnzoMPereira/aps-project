@@ -16,13 +16,11 @@ public class Main {
         todos.addAll(dados2024);
 
         // Calcula totais
-        Map<String, Double> porMunicipio2023 = AnaliseDesmatamento.calcularPorMunicipio(dados2023);
-        Map<String, Double> porMunicipio2024 = AnaliseDesmatamento.calcularPorMunicipio(dados2024);
         Map<String, Double> rankingGeral = AnaliseDesmatamento.obterTop5(
                 AnaliseDesmatamento.calcularPorMunicipio(todos)
         );
 
         // Exibe a interface completa
-        GraficoDesmatamento.exibirInterface(rankingGeral, porMunicipio2023, porMunicipio2024, todos);
+        GraficoDesmatamento.exibirInterface(rankingGeral, todos);
     }
 }
