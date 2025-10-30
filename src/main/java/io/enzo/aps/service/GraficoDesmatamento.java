@@ -11,14 +11,23 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.util.*;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class GraficoDesmatamento {
 
+    private static Map<Integer, List<RegistroDesmatamento>> registrosFiltrados;
+
+    private static Map<Integer, List<RegistroDesmatamento>> preProcessingFilter(List<RegistroDesmatamento> registros) {
+        return registros.stream()
+                .collect(Collectors.groupingBy(r -> Integer.parseInt(r.getData().split("-")[1])));
+    }
+
     public static void exibirInterface(Map<String, Double> dadosGeral,
                                        List<RegistroDesmatamento> registros) {
+
+        registrosFiltrados = preProcessingFilter(registros);
 
         // --- Datasets ---
         DefaultCategoryDataset datasetBarras = criarDatasetBarras(dadosGeral);
@@ -199,6 +208,8 @@ public class GraficoDesmatamento {
             if (indice == 0) {
                 atualizarTabela(modelo, registros);
             } else {
+
+                long startTime = System.nanoTime();
                 List<RegistroDesmatamento> filtrados = registros.stream()
                         .filter(r -> {
                             try {
@@ -211,6 +222,14 @@ public class GraficoDesmatamento {
                             }
                         })
                         .collect(Collectors.toList());
+                long endTime = System.nanoTime();
+                System.out.println("Mes: " + indice + ", qtd registros filtrados: " + filtrados.size() + ", Tempo de execução do O(n): " + (endTime - startTime) + " nanosegundos");
+
+                startTime = System.nanoTime();
+                filtrados = registrosFiltrados.getOrDefault(indice, registros);
+                endTime = System.nanoTime();
+                System.out.println("Mes: " + indice + ", qtd registros filtrados: " + filtrados.size() + ", Tempo de execução do O(1): " + (endTime - startTime) + " nanosegundos");
+
                 atualizarTabela(modelo, filtrados);
             }
         });
