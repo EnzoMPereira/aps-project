@@ -4,6 +4,8 @@ import java.util.*;
 import io.enzo.aps.model.RegistroDesmatamento;
 import io.enzo.aps.service.*;
 
+import javax.swing.*;
+
 public class Main {
     public static void main(String[] args) {
         // Lê os dados dos dois anos
@@ -21,6 +23,10 @@ public class Main {
         );
 
         // Exibe a interface completa
-        GraficoDesmatamento.exibirInterface(rankingGeral, todos);
+//        GraficoDesmatamento.exibirInterface(rankingGeral, todos);
+
+        SwingUtilities.invokeLater(() -> {
+            new PainelDesmatamentoUI(rankingGeral, todos).exibir();
+        });
     }
 }

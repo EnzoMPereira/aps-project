@@ -17,7 +17,7 @@ public class LeitorCSV {
                 String[] dados = linha.split(",");
                 String estado = dados[6];
                 String municipio = dados[7];
-                double area = Double.parseDouble(dados[2]);
+                double area = Double.parseDouble(dados[2]) < 0 ? 0 : Double.parseDouble(dados[2]);
                 String bioma = dados[8];
                 String data = dados[4];
 
