@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static io.enzo.aps.service.AnaliseDesmatamento.contarRegistrosPorMunicipio;
+import static io.enzo.aps.service.GraficoBuilder.criarGraficoBarrasRegistros;
+
 public class PainelDesmatamentoUI {
 
     private final Map<Integer, List<RegistroDesmatamento>> registrosFiltrados;
@@ -42,7 +45,9 @@ public class PainelDesmatamentoUI {
 
         // Painéis com gráficos e dados
         JPanel painelCentral = new JPanel(new CardLayout());
-        painelCentral.add(criarPainelBarras(), "barras");
+//        painelCentral.add(criarPainelBarras(), "barras");
+        List<Map<String, Double>> registrosPorMunicipio = contarRegistrosPorMunicipio(registros);
+        painelCentral.add(criarGraficoBarrasRegistros(registrosPorMunicipio), "barras");
         painelCentral.add(criarPainelLinhas(), "linhas");
         painelCentral.add(criarPainelDados(), "dados");
 

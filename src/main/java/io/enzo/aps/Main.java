@@ -22,9 +22,6 @@ public class Main {
                 AnaliseDesmatamento.calcularPorMunicipio(todos)
         );
 
-        // Exibe a interface completa
-//        GraficoDesmatamento.exibirInterface(rankingGeral, todos);
-
         SwingUtilities.invokeLater(() -> {
             new PainelDesmatamentoUI(rankingGeral, todos).exibir();
         });

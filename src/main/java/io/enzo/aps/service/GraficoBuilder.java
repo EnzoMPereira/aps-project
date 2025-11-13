@@ -57,4 +57,33 @@ public class GraficoBuilder {
                         Collectors.summingDouble(RegistroDesmatamento::getAreaKm2)
                 ));
     }
+
+    public static ChartPanel criarGraficoBarrasRegistros(List<Map<String, Double>> listaDados) {
+
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+
+        // Preenchendo o dataset com os dados
+        for (Map<String, Double> item : listaDados) {
+            for (Map.Entry<String, Double> entry : item.entrySet()) {
+                String municipio = entry.getKey();
+                Double quantidade = entry.getValue();
+                dataset.addValue(quantidade, "Registros", municipio);
+            }
+        }
+
+        // Criando o gráfico de barras
+        JFreeChart grafico = ChartFactory.createBarChart(
+                "Quantidade de Registros por Município",
+                "Município",
+                "Quantidade",
+                dataset,
+                PlotOrientation.VERTICAL,
+                true,   // legenda
+                true,   // tooltips
+                false   // URLs
+        );
+
+        return new ChartPanel(grafico);
+    }
+
 }

@@ -2,8 +2,6 @@ package io.enzo.aps.service;
 
 import java.io.*;
 import java.util.*;
-import java.util.stream.Collectors;
-
 import io.enzo.aps.model.RegistroDesmatamento;
 
 public class LeitorCSV {
